@@ -89,18 +89,34 @@ export const encode = (inputPath, outputPath) => {
             encoded[i+6] * 64 +
             encoded[i+7] * 128)            
     }
-    const buffer = new Uint8Array(bytes)
-    fs.writeFileSync(`${outputPath}.bin`, Buffer.from(buffer))
 
-    //todo - put in same file
     const serialisedTree = JSON.stringify(Object.assign(root, { additionalBits }))
-    fs.writeFileSync(`${outputPath}.tree`, Buffer.from(serialisedTree))
+    fs.writeFileSync(outputPath, Buffer.from(serialisedTree))
+
+    const buffer = new Uint8Array(bytes)
+    fs.appendFileSync(outputPath, Buffer.from(buffer))
 }
 
 
 export const decode = (inputPath, outputPath) => {
-    const tree = JSON.parse(fs.readFileSync(`${inputPath}.tree`).toString())
-    const buffer = fs.readFileSync(`${inputPath}.bin`)
+    const data = fs.readFileSync(`${inputPath}`)
+    const opening = '{'.charCodeAt(0)
+    const closing = '}'.charCodeAt(0)
+
+    let dataStart
+    let openingCount = 0
+    for (dataStart = 0; dataStart < data.length; dataStart++){
+        if (opening === data[dataStart])
+            openingCount++
+        if (closing === data[dataStart])
+            openingCount--
+        if (openingCount === 0)
+            break
+    }
+    const tableString = data.slice(0, dataStart + 1)
+    const tree = JSON.parse(Buffer.from(tableString).toString())
+    const buffer = data.slice(dataStart + 1)
+
     const readBit = (i, bit) => (buffer[i] >> bit) % 2
     let currentNode = tree
     let output = ''
@@ -128,5 +144,5 @@ export const decode = (inputPath, outputPath) => {
     fs.writeFileSync(outputPath, Buffer.from(output))
 }
 
-encode('test.txt', 'out')
-decode('out', 'decoded.txt')
+encode('test.txt', 'out.bin')
+decode('out.bin', 'decoded.txt')
