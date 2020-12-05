@@ -67,26 +67,29 @@ export const encode = (inputPath, outputPath) => {
     const charCountsPriorityQueue = getCharacterCount(data)
     const root = buildTree(charCountsPriorityQueue)
     const table = buildCharacterTranslation(root)
-    const translate = datum => table[datum]
-    //todo write bytes at this map stage
-    const encoded = [...data].map(translate).flat()
+    const encoded = []
+    for (let i = 0; i < data.length; i++){
+        encoded.push(...table[data[i]])
+    }
     const additionalBits = encoded.length % 8
-    const numBytes = additionalBits 
-        ? ~~(encoded.length / 8) + 1
-        : ~~(encoded.length / 8)
-
-    const buffer = new Uint8Array(numBytes)
-    // const readBit = (i, bit) => (buffer[i] >> bit) % 2
-    const setBit = (i, bit, value) => {
-        if (value == 0) {
-          buffer[i] &= ~(1 << bit)
-        } else {
-          buffer[i] |= (1 << bit)
+    if (additionalBits){
+        for (let i = 8 - additionalBits; i > 0; i--){
+            encoded.push(0)
         }
     }
-    for (const [index, bit] of encoded.entries()){
-        setBit(~~(index / 8), index % 8, bit)
+    const bytes = []
+    for (let i = 0; i < encoded.length; i += 8) {
+        bytes.push(
+            encoded[i] +
+            encoded[i+1] * 2 +
+            encoded[i+2] * 4 +
+            encoded[i+3] * 8 +
+            encoded[i+4] * 16 +
+            encoded[i+5] * 32 +
+            encoded[i+6] * 64 +
+            encoded[i+7] * 128)            
     }
+    const buffer = new Uint8Array(bytes)
     fs.writeFileSync(`${outputPath}.bin`, Buffer.from(buffer))
 
     //todo - put in same file
@@ -95,7 +98,7 @@ export const encode = (inputPath, outputPath) => {
 }
 
 
-const decode = (inputPath, outputPath) => {
+export const decode = (inputPath, outputPath) => {
     const tree = JSON.parse(fs.readFileSync(`${inputPath}.tree`).toString())
     const buffer = fs.readFileSync(`${inputPath}.bin`)
     const readBit = (i, bit) => (buffer[i] >> bit) % 2
@@ -121,7 +124,7 @@ const decode = (inputPath, outputPath) => {
             currentNode = tree
         }
     }
-    console.log(output)
+    // console.log(output)
     fs.writeFileSync(outputPath, Buffer.from(output))
 }
 
