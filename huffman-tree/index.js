@@ -48,40 +48,50 @@ const treeNode = (left, right, count, value) => ({
 })
 
 const buildCharacterTranslation = (currentNode, currentPath=[]) => {
+    const map = {}
     if (currentNode.value) {
-        return [{char: currentNode.value, charPath: currentPath}]
+        map[currentNode.value] = currentPath
+        return map
     }
-    const paths = []
     if (currentNode.left){
-        paths.push(...buildCharacterTranslation(currentNode.left, [...currentPath, 0]))
+        Object.assign(map, buildCharacterTranslation(currentNode.left, [...currentPath, 0]))
     }
     if (currentNode.right){
-        paths.push(...buildCharacterTranslation(currentNode.right, [...currentPath, 1]))
+        Object.assign(map, buildCharacterTranslation(currentNode.right, [...currentPath, 1]))
     }
-    return paths
+    return map
 }
 
-const characterTranslationTable = (rootNode) => {
-    const translations = buildCharacterTranslation(rootNode)
-    const t = new Map()
-    for (const translation of translations){
-        t.set(translation.char, translation.charPath.join(''))
-    }
-    return t
+var buffer = new Uint8Array(1);
+
+function readBit(buffer, i, bit){
+  return (buffer[i] >> bit) % 2;
 }
+
+function setBit(buffer, i, bit, value){
+  if(value == 0){
+    buffer[i] &= ~(1 << bit);
+  }else{
+    buffer[i] |= (1 << bit);
+  }
+}
+
+// write bit 0 of buffer[0]
+setBit(buffer, 0, 0, 1)
 
 export const encode = (inputPath, outputPath) => {
     const data = fs.readFileSync(inputPath, { encoding: 'ascii' }).toString()
     const charCountsPriorityQueue = getCharacterCount(data)
     const root = buildTree(charCountsPriorityQueue)
-    const table = characterTranslationTable(root)
-    const throughTranslationTable = datum => table.get(datum)
-        
-    const serialisedTable = [...table.keys()].map(k => `${k}:${table.get(k)}`).join(',').concat(';')
-    const encoded = [...data].map(throughTranslationTable).join('')
-    const output = serialisedTable.concat(encoded)
-    console.log({ output })
+    const table = buildCharacterTranslation(root)
+    const translate = datum => table[datum]
+    const serialisedTable = JSON.stringify(table)
+    // const buff = Buffer.from()
+    const encoded = [...data].map(translate).flat().join('')
+    // const output = serialisedTable.concat(encoded)
+    console.log({ table, encoded, serialisedTable })
     // fs.writeFileSync(output)
+    // 0000000000
 }
 
 const decode = () => {
