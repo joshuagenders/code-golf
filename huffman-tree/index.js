@@ -63,7 +63,10 @@ const buildCharacterTranslation = (currentNode, currentPath=[]) => {
 }
 
 export const encode = (inputPath, outputPath) => {
+    const hrstart = process.hrtime()
     const data = fs.readFileSync(inputPath, { encoding: 'ascii' }).toString()
+    console.log(`File: ${inputPath}`)
+    console.log(`Size: ${data.length} bytes`)
     const charCountsPriorityQueue = getCharacterCount(data)
     const root = buildTree(charCountsPriorityQueue)
     const table = buildCharacterTranslation(root)
@@ -90,15 +93,21 @@ export const encode = (inputPath, outputPath) => {
             encoded[i+7] * 128)            
     }
 
-    const serialisedTree = JSON.stringify(Object.assign(root, { additionalBits }))
-    fs.writeFileSync(outputPath, Buffer.from(serialisedTree))
+    const serialisedTree = Buffer.from(JSON.stringify(Object.assign(root, { additionalBits })))
+    fs.writeFileSync(outputPath, serialisedTree)
 
     const buffer = new Uint8Array(bytes)
     fs.appendFileSync(outputPath, Buffer.from(buffer))
+    const hrend = process.hrtime(hrstart)
+    
+    console.log(`Output size: ${serialisedTree.length + buffer.length} bytes\n`)
+    console.log(`Ratio: ${(serialisedTree.length + buffer.length) / data.length}`)
+    console.log("Execution time (hr): %ds %dms", hrend[0], hrend[1]/1000000)
 }
 
 
 export const decode = (inputPath, outputPath) => {
+    const hrstart = process.hrtime()
     const data = fs.readFileSync(`${inputPath}`)
     const opening = '{'.charCodeAt(0)
     const closing = '}'.charCodeAt(0)
@@ -142,7 +151,11 @@ export const decode = (inputPath, outputPath) => {
     }
     // console.log(output)
     fs.writeFileSync(outputPath, Buffer.from(output))
+    const hrend = process.hrtime(hrstart)
+    console.log("Decode execution time (hr): %ds %dms\n", hrend[0], hrend[1]/1000000)
 }
 
-encode('test.txt', 'out.bin')
-decode('out.bin', 'decoded.txt')
+['expectations', 'frankenstein', 'tale'].map(f => {
+    encode(`./testfiles/${f}.txt`, `./out/${f}.bin`)
+    decode(`./out/${f}.bin`, `./out/decoded-${f}.txt`)
+})
