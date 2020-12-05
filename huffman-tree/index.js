@@ -2,8 +2,8 @@ import fs from 'fs'
 
 const priorityQueue = (items=[]) => ({
     push(item){
-        for (const [x, i] in items){
-            if (item.count < x.count){
+        for (const [i, x] of items.entries()){
+            if (item.count > x.count){
                 items.splice(i, 0, item)
                 return
             }
@@ -65,7 +65,7 @@ const characterTranslationTable = (rootNode) => {
     const translations = buildCharacterTranslation(rootNode)
     const t = new Map()
     for (const translation of translations){
-        t.set(translation.char, translation.charPath)
+        t.set(translation.char, translation.charPath.join(''))
     }
     return t
 }
@@ -76,10 +76,12 @@ export const encode = (inputPath, outputPath) => {
     const root = buildTree(charCountsPriorityQueue)
     const table = characterTranslationTable(root)
     const throughTranslationTable = datum => table.get(datum)
-    const output = [...data].map(throughTranslationTable)
+        
+    const serialisedTable = [...table.keys()].map(k => `${k}:${table.get(k)}`).join(',').concat(';')
+    const encoded = [...data].map(throughTranslationTable).join('')
+    const output = serialisedTable.concat(encoded)
     console.log({ output })
-    //todo store translation table
-    // fs.writeFileSync(output.join())
+    // fs.writeFileSync(output)
 }
 
 const decode = () => {
