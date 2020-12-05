@@ -62,42 +62,68 @@ const buildCharacterTranslation = (currentNode, currentPath=[]) => {
     return map
 }
 
-var buffer = new Uint8Array(1);
-
-function readBit(buffer, i, bit){
-  return (buffer[i] >> bit) % 2;
-}
-
-function setBit(buffer, i, bit, value){
-  if(value == 0){
-    buffer[i] &= ~(1 << bit);
-  }else{
-    buffer[i] |= (1 << bit);
-  }
-}
-
-// write bit 0 of buffer[0]
-setBit(buffer, 0, 0, 1)
-
 export const encode = (inputPath, outputPath) => {
     const data = fs.readFileSync(inputPath, { encoding: 'ascii' }).toString()
     const charCountsPriorityQueue = getCharacterCount(data)
     const root = buildTree(charCountsPriorityQueue)
     const table = buildCharacterTranslation(root)
     const translate = datum => table[datum]
-    const serialisedTable = JSON.stringify(table)
-    // const buff = Buffer.from()
-    const encoded = [...data].map(translate).flat().join('')
-    // const output = serialisedTable.concat(encoded)
-    console.log({ table, encoded, serialisedTable })
-    // fs.writeFileSync(output)
-    // 0000000000
+    //todo write bytes at this map stage
+    const encoded = [...data].map(translate).flat()
+    const additionalBits = encoded.length % 8
+    const numBytes = additionalBits 
+        ? ~~(encoded.length / 8) + 1
+        : ~~(encoded.length / 8)
+
+    const buffer = new Uint8Array(numBytes)
+    // const readBit = (i, bit) => (buffer[i] >> bit) % 2
+    const setBit = (i, bit, value) => {
+        if (value == 0) {
+          buffer[i] &= ~(1 << bit)
+        } else {
+          buffer[i] |= (1 << bit)
+        }
+    }
+    for (const [index, bit] of encoded.entries()){
+        setBit(~~(index / 8), index % 8, bit)
+    }
+    fs.writeFileSync(`${outputPath}.bin`, Buffer.from(buffer))
+
+    //todo - put in same file
+    const serialisedTree = JSON.stringify(Object.assign(root, { additionalBits }))
+    fs.writeFileSync(`${outputPath}.tree`, Buffer.from(serialisedTree))
 }
 
-const decode = () => {
-    //decode translation table
-    //run data back through translation table
-    //output text to file
+
+const decode = (inputPath, outputPath) => {
+    const tree = JSON.parse(fs.readFileSync(`${inputPath}.tree`).toString())
+    const buffer = fs.readFileSync(`${inputPath}.bin`)
+    const readBit = (i, bit) => (buffer[i] >> bit) % 2
+    let currentNode = tree
+    let output = ''
+    const bitCount = tree.additionalBits
+        ? (buffer.length * 8) - (8 - tree.additionalBits)
+        : (buffer.length * 8)
+
+    for (let i = 0; i < bitCount; i++){
+        const bit = readBit(~~(i / 8), i % 8)
+        if (bit){
+            if (currentNode.right){
+                currentNode = currentNode.right
+            }
+        }else{
+            if (currentNode.left){
+                currentNode = currentNode.left
+            }
+        }
+        if (currentNode.value){
+            output += currentNode.value
+            currentNode = tree
+        }
+    }
+    console.log(output)
+    fs.writeFileSync(outputPath, Buffer.from(output))
 }
 
-encode('test.txt', '')
+encode('test.txt', 'out')
+decode('out', 'decoded.txt')
