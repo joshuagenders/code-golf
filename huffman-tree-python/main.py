@@ -1,29 +1,24 @@
 
+import heapq
+
 def lz(data):
-    d = {i:chr(i) for i in range(255)}
+    d = {chr(i):i for i in range(255)}
     output = []
-    ascii_bytes = bytes(data, 'utf-8')
+    byte_data = bytes(data, 'utf-8')
     counter = 256
     i = 0
-    while(i < len(ascii_bytes)):
-        current_window = 1
-        current = ascii_bytes[i:i+current_window]
-        nxt = ascii_bytes[i:i+current_window+1]
-        while(nxt in d.values()):
-            current_window += 1
-            current = ascii_bytes[i:i+current_window]
-            nxt = ascii_bytes[i:i+current_window+1]
-        if nxt not in d:
-            d[counter] = nxt
+    current_window = 1
+    for i in range(0, len(byte_data), current_window):
+        current = byte_data[i:i + current_window]
+        nxt = current = byte_data[i:i + current_window + 1]
+        if (nxt in d):
+            output.append(d[nxt] ^ 65280)
+            output.append(d[nxt] & 255)
+        else:
+            d[nxt] = counter
             counter += 1
-        if current_window == 1:
             output.append(current[0])
             output.append(0)
-        else:
-            output.append(counter >> 8)
-            output.append(counter ^ (2**8))
-        i += current_window
-
     return output
 
 def encode(input_file, output_file):
@@ -33,9 +28,33 @@ def encode(input_file, output_file):
     zipped = lz(data)
     print(f'Zipped size: {len(zipped)}')
 
-    # character_list = [{chr(i): data.count(chr(i))} for i in range(256)]
+    q = []
+    for i in range(256):
+        value = chr(i)
+        count = data.count(chr(i))
+        left = None
+        right = None
+        heapq.heappush(q, (count, { value, count, left, right }))
+    while len(q) > 1:
+        right = heapq.heappop(q)
+        left = heapq.heappop(q)
+        count = left[0]+right[0]
+        value = None
+        heapq.heappush(q, (count, { value, count, left, right }))
+    translation = build_character_translation(q[0])
+    translated = map(lambda x: translation[x], zipped)
+    print(translated)
     # lz then huffman tree
     # print(character_list)
+def build_character_translation(start_node, current_path=[]):
+    if start_node.value:
+        return current_path
+    paths = []
+    if start_node.left:
+        paths.extend(build_character_translation(start_node.left, current_path[:].append(0)))
+    if start_node.right:
+        paths.extend(build_character_translation(start_node.right, current_path[:].append(1)))
+    return paths
 
 def decode(input_file, output_file):
     pass
