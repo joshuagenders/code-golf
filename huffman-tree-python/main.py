@@ -93,7 +93,7 @@ def encode(input_file, output_file):
     print(f'File: {input_file}')
     print(f'File size: {len(data)}')
     zipped = lz(data)
-    print(zipped)
+    # print(zipped)
 
     print(f'Zipped size: {len(zipped)}')
     # print(zipped)
@@ -113,7 +113,7 @@ def encode(input_file, output_file):
     translation_list = build_character_translation(root, [])
     translation = {k:v for list_item in translation_list for (k,v) in list_item.items()}
     encoded = list(itertools.chain(*[translation.get(n) for n in zipped]))
-    print(*encoded)
+    # print(*encoded)
    
     encoded_bytes = bytes(chunk_to_byte(b) for b in byte_chunks(encoded))
     # serialisedTree = json.dumps(root)
@@ -140,5 +140,5 @@ def decode(input_file, output_file):
     pass
 
 if __name__ == "__main__":
-    encode('./testfiles/test.txt', 'output.bin')
+    encode('./testfiles/tale.txt', 'output.bin')
     decode('output.bin', 'decoded.txt')
