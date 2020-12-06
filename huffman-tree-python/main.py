@@ -1,25 +1,66 @@
 
-import heapq, json
+import heapq
+import json
 import itertools
+from functools import reduce
+
+# def lz(data):
+#     d = {chr(i):i for i in range(255)}
+#     output = []
+#     byte_data = bytes(data, 'utf-8')
+#     counter = 256
+#     current_window = 1
+#     for i in range(0, len(byte_data), current_window):
+#         current = byte_data[i:i + current_window]
+#         nxt = byte_data[i:i + current_window + 1]
+#         if (nxt in d):
+#             output.append(d[nxt] % 255)
+#             output.append(d[nxt] & 0x000000FF)
+#         else:
+#             d[nxt] = counter
+#             counter += 1
+#             output.append(current[0])
+#             output.append(0)
+#     return output
 
 def lz(data):
-    d = {chr(i):i for i in range(255)}
+    d = {i:chr(i) for i in range(255)}
     output = []
-    byte_data = bytes(data, 'utf-8')
+    int_data = [int(b) for b in bytes(data, 'utf-8')]
     counter = 256
     current_window = 1
-    for i in range(0, len(byte_data), current_window):
-        current = byte_data[i:i + current_window]
-        nxt = current = byte_data[i:i + current_window + 1]
-        if (nxt in d):
-            output.append(d[nxt] % 255)
-            output.append(d[nxt] & 0x000000FF)
+    
+    for i in range(0, len(int_data), current_window):
+        current = chr(int_data[i:i + current_window][0])
+        x = list(map(chr, int_data[i:i + current_window + 1]))
+        nxt = ''.join([current] + x)
+        if (nxt in d.values()):
+            for k, v in d.items():
+                if v == nxt:
+                    output.append((int(k) % 255, int(k) & 0x000000FF))
+                    break
         else:
-            d[nxt] = counter
+            d[counter] = nxt
             counter += 1
-            output.append(current[0])
-            output.append(0)
+            output.append((ord(current), 0))
+
     return output
+
+def unlz(data):
+    # construct d (table) - lookups for 0-255
+    # for int in byte pairs
+    #   if val in table
+    #     add to table
+    #   perform lookup
+    #   write output
+
+    pass
+
+def decode_data():
+    # parse tree from file
+    # parse data into byte array
+    # unzip byte array
+    pass
 
 class Node:
     def __init__(self, left, right, count, value):
@@ -32,29 +73,71 @@ class Node:
     # def __str__(self):
     #     return (f'Node: {self.value} count {self.count} \n  left: {self.left is not None}\n right: {self.right is not None}\n')
 
+def chunk_to_byte(b):
+    return 1 * b[0] + 2 * b[1] + 4 * b[2] + 8 * b[3] + 16 * b[4] + 32 * b[5] + 64 * b[6] + 128 * b[7]
+
+def byte_chunks(arr):
+    for i in range(0, len(arr), 8):
+        if (i + 8 > len(arr)):
+            x = arr[i:len(arr)]
+            x.extend([0] * (8 - (len(arr)-i)))
+            yield x 
+        else:
+            yield arr[i:i + 8]
+
+def huffman():
+    # q = []
+    # for i in range(256):
+    #     count = bytes(zipped).count(i)
+    #     if (count):
+    #         value = i
+    #         n = Node(None, None, count, value)
+    #         heapq.heappush(q, (count, n))
+    # while len(q) > 1:
+    #     right = heapq.heappop(q)[1]
+    #     left = heapq.heappop(q)[1]
+    #     count = left.count + right.count
+    #     heapq.heappush(q, (count, Node(left, right, count, None)))
+    # root = q[0][1]
+    # translation_list = build_character_translation(root, [])
+    # translation = {k:v for list_item in translation_list for (k,v) in list_item.items()}
+    # encoded = list(itertools.chain(*[translation.get(n) for n in zipped]))
+    pass
+
 def encode(input_file, output_file):
-    data = open(input_file, encoding='utf-8').read()
+    with open(input_file, encoding='utf-8') as f:
+        data = f.read()
     print(f'File: {input_file}')
     print(f'File size: {len(data)}')
-    zipped = lz(data)
-    print(f'Zipped size: {len(zipped)}')
+    zipped = lz_perf(data)
     print(zipped)
-    q = []
-    for i in range(256):
-        count = bytes(zipped).count(i)
-        if (count):
-            value = i
-            n = Node(None, None, count, value)
-            heapq.heappush(q, (count, n))
-    while len(q) > 1:
-        right = heapq.heappop(q)[1]
-        left = heapq.heappop(q)[1]
-        count = left.count + right.count
-        heapq.heappush(q, (count, Node(left, right, count, None)))
-    translation_list = build_character_translation(q[0][1], [])
-    translation = {k:v for list_item in translation_list for (k,v) in list_item.items()}
-    encoded = list(itertools.chain(*[translation.get(n) for n in zipped]))
-    print(*encoded)
+
+    # print(f'Zipped size: {len(zipped)}')
+    # # print(zipped)
+    # q = []
+    # for i in range(256):
+    #     count = bytes(zipped).count(i)
+    #     if (count):
+    #         value = i
+    #         n = Node(None, None, count, value)
+    #         heapq.heappush(q, (count, n))
+    # while len(q) > 1:
+    #     right = heapq.heappop(q)[1]
+    #     left = heapq.heappop(q)[1]
+    #     count = left.count + right.count
+    #     heapq.heappush(q, (count, Node(left, right, count, None)))
+    # root = q[0][1]
+    # translation_list = build_character_translation(root, [])
+    # translation = {k:v for list_item in translation_list for (k,v) in list_item.items()}
+    # encoded = list(itertools.chain(*[translation.get(n) for n in zipped]))
+    # print(*encoded)
+   
+    # encoded_bytes = bytes(chunk_to_byte(b) for b in byte_chunks(encoded))
+    # serialisedTree = json.dumps(root)
+    # print(serialisedTree)
+    # print(f'Encoded size: {len(encoded_bytes)}')
+    # with open(output_file, 'wb') as f:
+    #     f.write(encoded)
 
 def build_character_translation(start_node, current_path=[]):
     if start_node.value is not None:
