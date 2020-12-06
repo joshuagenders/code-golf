@@ -37,14 +37,32 @@ def lz(data):
         if (nxt in d.values()):
             for k, v in d.items():
                 if v == nxt:
-                    output.append((int(k) % 255, int(k) & 0x000000FF))
+                    output.append(int(k) % 255)
+                    output.append(int(k) & 0x000000FF))
                     break
         else:
             d[counter] = nxt
             counter += 1
-            output.append((ord(current), 0))
+            output.append(ord(current))
+            output.append(0)
 
-    return output
+    byte_output = []
+    half_remaining = False
+    for i in range(len(output)):
+        is_dict_bits = i % 2 == 1
+        if not half_remaining:
+            if is_dict_bits:
+                byte_output.append(output[i] << 4)
+            else:
+                byte_output.append(output[i])
+        else:
+            if is_dict_bits:
+                byte_output[-1:] = byte_output[-1:] ^ output[i]
+            else:
+                byte_output[-1:] = byte_output[-1:] ^ (output[i] >> 4 )
+                byte_output.append(output[i] << 4)
+
+    return bytes(byte_output)
 
 def unlz(data):
     # construct d (table) - lookups for 0-255
@@ -85,59 +103,40 @@ def byte_chunks(arr):
         else:
             yield arr[i:i + 8]
 
-def huffman():
-    # q = []
-    # for i in range(256):
-    #     count = bytes(zipped).count(i)
-    #     if (count):
-    #         value = i
-    #         n = Node(None, None, count, value)
-    #         heapq.heappush(q, (count, n))
-    # while len(q) > 1:
-    #     right = heapq.heappop(q)[1]
-    #     left = heapq.heappop(q)[1]
-    #     count = left.count + right.count
-    #     heapq.heappush(q, (count, Node(left, right, count, None)))
-    # root = q[0][1]
-    # translation_list = build_character_translation(root, [])
-    # translation = {k:v for list_item in translation_list for (k,v) in list_item.items()}
-    # encoded = list(itertools.chain(*[translation.get(n) for n in zipped]))
-    pass
-
 def encode(input_file, output_file):
     with open(input_file, encoding='utf-8') as f:
         data = f.read()
     print(f'File: {input_file}')
     print(f'File size: {len(data)}')
-    zipped = lz_perf(data)
+    zipped = lz(data)
     print(zipped)
 
-    # print(f'Zipped size: {len(zipped)}')
-    # # print(zipped)
-    # q = []
-    # for i in range(256):
-    #     count = bytes(zipped).count(i)
-    #     if (count):
-    #         value = i
-    #         n = Node(None, None, count, value)
-    #         heapq.heappush(q, (count, n))
-    # while len(q) > 1:
-    #     right = heapq.heappop(q)[1]
-    #     left = heapq.heappop(q)[1]
-    #     count = left.count + right.count
-    #     heapq.heappush(q, (count, Node(left, right, count, None)))
-    # root = q[0][1]
-    # translation_list = build_character_translation(root, [])
-    # translation = {k:v for list_item in translation_list for (k,v) in list_item.items()}
-    # encoded = list(itertools.chain(*[translation.get(n) for n in zipped]))
-    # print(*encoded)
+    print(f'Zipped size: {len(zipped)}')
+    # print(zipped)
+    q = []
+    for i in range(256):
+        count = bytes(zipped).count(i)
+        if (count):
+            value = i
+            n = Node(None, None, count, value)
+            heapq.heappush(q, (count, n))
+    while len(q) > 1:
+        right = heapq.heappop(q)[1]
+        left = heapq.heappop(q)[1]
+        count = left.count + right.count
+        heapq.heappush(q, (count, Node(left, right, count, None)))
+    root = q[0][1]
+    translation_list = build_character_translation(root, [])
+    translation = {k:v for list_item in translation_list for (k,v) in list_item.items()}
+    encoded = list(itertools.chain(*[translation.get(n) for n in zipped]))
+    print(*encoded)
    
-    # encoded_bytes = bytes(chunk_to_byte(b) for b in byte_chunks(encoded))
-    # serialisedTree = json.dumps(root)
-    # print(serialisedTree)
-    # print(f'Encoded size: {len(encoded_bytes)}')
-    # with open(output_file, 'wb') as f:
-    #     f.write(encoded)
+    encoded_bytes = bytes(chunk_to_byte(b) for b in byte_chunks(encoded))
+    serialisedTree = json.dumps(root)
+    print(serialisedTree)
+    print(f'Encoded size: {len(encoded_bytes)}')
+    with open(output_file, 'wb') as f:
+        f.write(encoded)
 
 def build_character_translation(start_node, current_path=[]):
     if start_node.value is not None:
