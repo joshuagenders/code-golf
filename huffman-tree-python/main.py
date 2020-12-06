@@ -38,7 +38,7 @@ def lz(data):
             for k, v in d.items():
                 if v == nxt:
                     output.append(int(k) % 255)
-                    output.append(int(k) & 0x000000FF))
+                    output.append(int(k) & 0x000000FF)
                     break
         else:
             d[counter] = nxt
@@ -132,11 +132,11 @@ def encode(input_file, output_file):
     print(*encoded)
    
     encoded_bytes = bytes(chunk_to_byte(b) for b in byte_chunks(encoded))
-    serialisedTree = json.dumps(root)
-    print(serialisedTree)
+    # serialisedTree = json.dumps(root)
+    # print(serialisedTree)
     print(f'Encoded size: {len(encoded_bytes)}')
     with open(output_file, 'wb') as f:
-        f.write(encoded)
+        f.write(encoded_bytes)
 
 def build_character_translation(start_node, current_path=[]):
     if start_node.value is not None:
