@@ -4,25 +4,6 @@ import json
 import itertools
 from functools import reduce
 
-# def lz(data):
-#     d = {chr(i):i for i in range(255)}
-#     output = []
-#     byte_data = bytes(data, 'utf-8')
-#     counter = 256
-#     current_window = 1
-#     for i in range(0, len(byte_data), current_window):
-#         current = byte_data[i:i + current_window]
-#         nxt = byte_data[i:i + current_window + 1]
-#         if (nxt in d):
-#             output.append(d[nxt] % 255)
-#             output.append(d[nxt] & 0x000000FF)
-#         else:
-#             d[nxt] = counter
-#             counter += 1
-#             output.append(current[0])
-#             output.append(0)
-#     return output
-
 def lz(data):
     d = {i:chr(i) for i in range(255)}
     output = []
@@ -37,7 +18,7 @@ def lz(data):
         if (nxt in d.values()):
             for k, v in d.items():
                 if v == nxt:
-                    output.append(int(k) % 255)
+                    output.append((int(k) & 0x0000FF00) >> 8)
                     output.append(int(k) & 0x000000FF)
                     break
         else:
@@ -52,16 +33,19 @@ def lz(data):
         is_dict_bits = i % 2 == 1
         if not half_remaining:
             if is_dict_bits:
-                byte_output.append(output[i] << 4)
+                byte_output.append(output[i] << 4 & 0x00000010)
+                half_remaining = True
             else:
                 byte_output.append(output[i])
         else:
             if is_dict_bits:
-                byte_output[-1:] = byte_output[-1:] ^ output[i]
+                byte_output[-1:] = [byte_output[-1:][0] ^ output[i]]
+                half_remaining = False
             else:
-                byte_output[-1:] = byte_output[-1:] ^ (output[i] >> 4 )
-                byte_output.append(output[i] << 4)
-
+                byte_output[-1:] = [byte_output[-1:][0] ^ (output[i] >> 4)]
+                byte_output.append((output[i] << 4) & 0x00000010)
+                half_remaining = True
+    # print(byte_output)
     return bytes(byte_output)
 
 def unlz(data):
