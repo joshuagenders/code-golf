@@ -52,12 +52,8 @@ def encode(input_file, output_file):
 
     translation_list = build_character_translation(root, [])
     translation = {k:v for list_item in translation_list for (k,v) in list_item.items()}
-    print(f'data: {data}')
-    print(f'translation {translation}')
-    
+
     encoded = list(itertools.chain(*[translation.get(n) for n in data]))
-    print(f'encoded: {encoded}')
-    
     encoded_bytes = bytes(chunk_to_byte(b) for b in byte_chunks(encoded))
     additional_bytes = len(encoded) % 8
     root.additional_bytes = additional_bytes
@@ -126,5 +122,5 @@ def decode(input_file, output_file):
         f.write(data)
 
 if __name__ == "__main__":
-    encode('./testfiles/test.txt', 'output.bin')
-    decode('output.bin', 'decoded.txt')
+    encode('./testfiles/test.txt', './testfiles/output.bin')
+    decode('./testfiles/output.bin', './testfiles/decoded.txt')
