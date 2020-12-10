@@ -31,14 +31,14 @@ def byte_chunks(arr):
             yield arr[i:i + 8]
 
 def encode(input_file, output_file):
-    with open(input_file, encoding='utf-8') as f:
+    with open(input_file, 'rb') as f:
         data = f.read()
     print(f'File: {input_file}')
     print(f'File size: {len(data)}')
     
     q = []
     for i in range(256):
-        count = bytes(data, 'utf-8').count(i)
+        count = data.count(i)
         if (count):
             value = i
             n = Node(None, None, count, value)
@@ -49,13 +49,21 @@ def encode(input_file, output_file):
         count = left.count + right.count
         heapq.heappush(q, (count, Node(left, right, count, None)))
     root = q[0][1]
+
     translation_list = build_character_translation(root, [])
     translation = {k:v for list_item in translation_list for (k,v) in list_item.items()}
-    encoded = list(itertools.chain(*[translation.get(n) for n in bytes(data, 'utf-8')]))
+    print(f'data: {data}')
+    print(f'translation {translation}')
+    
+    encoded = list(itertools.chain(*[translation.get(n) for n in data]))
+    print(f'encoded: {encoded}')
     
     encoded_bytes = bytes(chunk_to_byte(b) for b in byte_chunks(encoded))
+    additional_bytes = len(encoded) % 8
+    root.additional_bytes = additional_bytes
+    
     serialisedTree = DefaultEncoder().encode(root)
-    output = bytes(serialisedTree, 'utf-8') + encoded_bytes
+    output = bytes(serialisedTree, 'ascii') + encoded_bytes
     print(f'Encoded size: {len(output)}')
     print(f'Ratio: {len(output) / len(data)}')
     with open(output_file, 'wb') as f:
@@ -91,13 +99,15 @@ def decode_data(input_file):
         if (openingCount == 0):
             data_start = i + 1
             break
-    tree_data = data[:data_start]
+    tree_data = data[0:data_start]
     encoded_data = data[data_start:]
     tree = json.loads(tree_data)
     read_bit = lambda i, bit: (encoded_data[i] >> bit) % 2
     current_node = tree
     output = ''
-    for i in range(len(encoded_data)):
+
+    bit_count = (len(encoded_data) * 8) - (8 - tree['additional_bytes'])
+    for i in range(bit_count):
         bit = read_bit(i // 8, i % 8)
         if bit:
             if current_node['right']:
@@ -116,5 +126,5 @@ def decode(input_file, output_file):
         f.write(data)
 
 if __name__ == "__main__":
-    encode('./testfiles/tale.txt', 'output.bin')
+    encode('./testfiles/test.txt', 'output.bin')
     decode('output.bin', 'decoded.txt')
