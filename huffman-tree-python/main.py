@@ -64,8 +64,8 @@ def encode(input_file, output_file):
     additional_bytes = len(encoded) % 8
     root.additional_bytes = additional_bytes
     
-    serialisedTree = DefaultEncoder().encode(root)
-    output = bytes(serialisedTree, 'ascii') + encoded_bytes
+    serialised_tree = DefaultEncoder().encode(root)
+    output = bytes(serialised_tree, 'ascii') + encoded_bytes
     print(f'Encoded size: {len(output)}')
     print(f'Ratio: {len(output) / len(data)}')
     with open(output_file, 'wb') as f:
