@@ -90,15 +90,15 @@ def decode_data(input_file):
         data = f.read()
     opening = ord('{')
     closing = ord('}')
-    openingCount = 0
+    opening_count = 0
     start = data.index(opening)
     for i in range(start, len(data)):
         val = data[i]
         if (opening == val):
-            openingCount += 1
+            opening_count += 1
         if (closing == val):
-            openingCount -= 1
-        if (openingCount == 0):
+            opening_count -= 1
+        if (opening_count == 0):
             data_start = i + 1
             break
     tree_data = data[0:data_start]
