@@ -30,12 +30,7 @@ def byte_chunks(arr):
         else:
             yield arr[i:i + 8]
 
-def encode(input_file, output_file):
-    with open(input_file, 'rb') as f:
-        data = f.read()
-    print(f'File: {input_file}')
-    print(f'File size: {len(data)}')
-    
+def build_tree(data):
     q = []
     for i in range(256):
         count = data.count(i)
@@ -48,12 +43,23 @@ def encode(input_file, output_file):
         left = heapq.heappop(q)[1]
         count = left.count + right.count
         heapq.heappush(q, (count, Node(left, right, count, None)))
-    root = q[0][1]
+    return q[0][1]
+
+def object_list_to_dict(items):
+    return {k:v for list_item in items for (k,v) in list_item.items()}
+
+def encode(input_file, output_file):
+    with open(input_file, 'rb') as f:
+        data = f.read()
+    print(f'File: {input_file}')
+    print(f'File size: {len(data)}')
+    
+    root = build_tree(data)
 
     translation_list = build_character_translation(root, [])
-    translation = {k:v for list_item in translation_list for (k,v) in list_item.items()}
+    translation = object_list_to_dict(translation_list)
 
-    encoded = list(itertools.chain(*[translation.get(n) for n in data]))
+    encoded = list(itertools.chain(*[translation.get(byte) for byte in data]))
     encoded_bytes = bytes(chunk_to_byte(b) for b in byte_chunks(encoded))
     additional_bytes = len(encoded) % 8
     root.additional_bytes = additional_bytes
