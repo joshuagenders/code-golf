@@ -100,7 +100,7 @@ def decode_data(input_file):
     tree = json.loads(tree_data)
     read_bit = lambda i, bit: (encoded_data[i] >> bit) % 2
     current_node = tree
-    output = ''
+    output = bytearray()
 
     bit_count = (len(encoded_data) * 8) - (8 - tree['additional_bytes'])
     for i in range(bit_count):
@@ -112,15 +112,15 @@ def decode_data(input_file):
             if current_node['left']:
                 current_node = current_node['left']
         if current_node['value']:
-            output += chr(current_node['value'])
+            output.append(current_node['value'])
             current_node = tree
     return output
 
 def decode(input_file, output_file):
     data = decode_data(input_file)
-    with open(output_file, 'w', encoding="utf-8") as f:
+    with open(output_file, 'wb') as f:
         f.write(data)
 
 if __name__ == "__main__":
-    encode('./testfiles/test.txt', './testfiles/output.bin')
+    encode('./testfiles/tale.txt', './testfiles/output.bin')
     decode('./testfiles/output.bin', './testfiles/decoded.txt')
