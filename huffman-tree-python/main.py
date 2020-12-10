@@ -45,7 +45,7 @@ def build_tree(data):
         heapq.heappush(q, (count, Node(left, right, count, None)))
     return q[0][1]
 
-def object_list_to_dict(items):
+def merge_dictionaries(items):
     return {k:v for list_item in items for (k,v) in list_item.items()}
 
 def encode(input_file, output_file):
@@ -57,7 +57,7 @@ def encode(input_file, output_file):
     root = build_tree(data)
 
     translation_list = build_character_translation(root, [])
-    translation = object_list_to_dict(translation_list)
+    translation = merge_dictionaries(translation_list)
 
     encoded = list(itertools.chain(*[translation.get(byte) for byte in data]))
     encoded_bytes = bytes(chunk_to_byte(b) for b in byte_chunks(encoded))
