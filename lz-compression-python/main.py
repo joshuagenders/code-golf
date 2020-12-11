@@ -1,5 +1,6 @@
 from bitstring import BitArray
 
+# todo : variable length
 def compress(d: bytes):
     bit_count = 10
     compressed_int = lambda x: BitArray(x.to_bytes(2, 'big'))[16 - bit_count:]
@@ -11,7 +12,6 @@ def compress(d: bytes):
     byte_index = 0
     counter = 256
     
-    print (f'byte count {byte_count}')
     while byte_index < byte_count:
         current_window = 8
         current_bytes = data[byte_index*8:byte_index*8 + current_window]
@@ -27,38 +27,35 @@ def compress(d: bytes):
         # if there is a next byte and there is room in the dictionary then add to dictionary
         if byte_index + current_window // 8 < byte_count and counter < 2 ** bit_count:
             byte_val = BitArray(counter.to_bytes(2, 'big'))[16 - bit_count:]
-            print (f'add to dict: {current_bytes}:{byte_val}')
             dictionary[next_bytes.bin] = byte_val
             counter += 1
 
         to_output = dictionary[current_bytes.bin]
-        output.prepend(to_output)
+        output.append(to_output)
         byte_index += current_window // 8 - 1 or 1
-    print (f'uncompressed  : {data.bin}')
-    print (f'compressed    : {output.bin}')
+    return output
     
 
-def decompress(data):
-    compressed_int = lambda x: BitArray(x.to_bytes(2, 'big'))[16 - bit_count:]
-    int_to_8bits = lambda x: BitArray(x.to_bytes(1, 'big'))
-    dictionary = {compressed_int(i):int_to_8bits(i).bin for i in range(255)}
-
-    output = bytearray()
+def decompress(data: BitArray):
     bit_count = 10
-    for index in range(0, len(output), bit_count):
-        # take val
-        window = bit_count
-        current = bytes(data[index:index + bit_count])
-        nxt = bytes(data[index:index + bit_count + window])
-
-        # decode
-        while nxt in dictionary:
-            index += bit_count
-            current = bytes(data[index:index+bit_count])    
-
-def main():
-    # compress(b'thisissthe')
-    compress(b'???')
+    counter = 256
+    compressed_int = lambda x: BitArray(x.to_bytes(2, 'big'))[16 - bit_count:]
+    dictionary = {compressed_int(i).bin:i.to_bytes(1, 'big') for i in range(255)}
+    output = bytearray()
+    for index in range(0, len(data), bit_count):
+        current = data[index:index + bit_count]
+        nxt = data[index:index+bit_count+bit_count]
+        if nxt.bin not in dictionary and counter < 2 ** bit_count:
+            key = compressed_int(counter).bin
+            dictionary[key] = nxt.tobytes()
+            counter += 1
+        
+        to_output = dictionary[current.bin]
+        output.extend(to_output)
+    return output
 
 if __name__ == "__main__":
-    main()
+    val = b'?? ??'
+    compressed = compress(val)
+    decompressed = decompress(val)
+    assert decompressed == val
