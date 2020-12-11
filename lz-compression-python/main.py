@@ -44,11 +44,21 @@ def decompress(data: BitArray):
     output = bytearray()
     for i in range(0, len(data) // bit_count):
         index = i * bit_count
+        window = bit_count
         current = data[index:index + bit_count]
-        nxt = data[index+bit_count:index+bit_count+bit_count]
-        if current.bin + nxt.bin not in dictionary and counter < 2 ** bit_count:
+        nxt = data[index+bit_count:index+window+bit_count]
+        while current.bin + nxt.bin in dictionary:
+            window += bit_count
+            if nxt:
+                current = nxt
+                nxt = data[index+bit_count:index+window+bit_count]
+            else:
+                break
+
+        # todo : variable length
+        if counter < 2 ** bit_count and index + window < len(data):
             key = compressed_int(counter).bin
-            v = dictionary[current.bin] + dictionary[nxt.bin]
+            v = dictionary[current.bin] + bytes([dictionary[nxt.bin][0]])
             dictionary[key] = v
             counter += 1
 
@@ -57,10 +67,11 @@ def decompress(data: BitArray):
     return output
 
 if __name__ == "__main__":
-    val = b'?? ??'
+    val = b'?? ?? abc abcabcabc ab??c'
     compressed = compress(val)
-    decompressed = decompress(compressed)
-    print (f'val: {val}')
+    print (f'val: {bytes(val)}')
     print (f'compressed: {compressed}')
-    print (f'decompressed: {decompressed}')
-    assert decompressed == val
+
+    decompressed = decompress(compressed)
+    print (f'decompressed: {bytes(decompressed)}')
+    assert bytes(decompressed) == val
