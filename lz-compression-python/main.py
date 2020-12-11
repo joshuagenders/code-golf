@@ -45,18 +45,13 @@ def decompress(data: BitArray):
     for i in range(0, len(data) // bit_count):
         index = i * bit_count
         current = data[index:index + bit_count]
-        print (f'current {current}')
         key = compressed_int(counter).bin
         if i + 1 < len(data) // bit_count:
             nxt = data[index+bit_count:index+bit_count+bit_count]
-            print(f'  nxt {nxt.bin} ')
             counter += 1
-            x = dictionary[nxt.bin]
-            dictionary[key] = dictionary[current.bin] + bytes([x[0]])
-            print (f'  key {key} val {dictionary[key]}')
-    
+            dictionary[key] = dictionary[current.bin] + bytes([dictionary[nxt.bin][0]])
+        
         to_output = dictionary[current.bin]
-        print(f' output : {to_output}')
         output.extend(to_output)
     return output
 
