@@ -52,9 +52,8 @@ def decompress(data: BitArray):
             print(f'  nxt {nxt.bin} ')
             counter += 1
             x = dictionary[nxt.bin]
-            dictionary[key] = bytes([dictionary[current.bin][0]]) + dictionary[current.bin]
-            print (f'  key {key}')
-            print (f'    val {dictionary[key]}')
+            dictionary[key] = dictionary[current.bin] + bytes([x[0]])
+            print (f'  key {key} val {dictionary[key]}')
     
         to_output = dictionary[current.bin]
         print(f' output : {to_output}')
@@ -62,11 +61,11 @@ def decompress(data: BitArray):
     return output
 
 if __name__ == "__main__":
-    # val = b'?? ?? abc abcabcabc ab??c'
+    val = b'?? ?? abc abcabcabc ab??c'
     # val = b'ababc'
     # val = b'???'
     # val = b'thisisthe'
-    val = b'abc abc'
+    # val = b'ababcabca'
     compressed = compress(val)
     decompressed = decompress(compressed)
     print (f'compressed: {compressed}')
