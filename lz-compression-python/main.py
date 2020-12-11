@@ -38,40 +38,38 @@ def compress(d: bytes):
 
 def decompress(data: BitArray):
     bit_count = 10
-    counter = 256
     compressed_int = lambda x: BitArray(x.to_bytes(2, 'big'))[16 - bit_count:]
     dictionary = {compressed_int(i).bin:i.to_bytes(1, 'big') for i in range(255)}
+    counter = 256
     output = bytearray()
     for i in range(0, len(data) // bit_count):
         index = i * bit_count
-        window = bit_count
         current = data[index:index + bit_count]
-        nxt = data[index+bit_count:index+window+bit_count]
-        while current.bin + nxt.bin in dictionary:
-            window += bit_count
-            if nxt:
-                current = nxt
-                nxt = data[index+bit_count:index+window+bit_count]
-            else:
-                break
-
-        # todo : variable length
-        if counter < 2 ** bit_count and index + window < len(data):
-            key = compressed_int(counter).bin
-            v = dictionary[current.bin] + bytes([dictionary[nxt.bin][0]])
-            dictionary[key] = v
+        print (f'current {current}')
+        key = compressed_int(counter).bin
+        if i + 1 < len(data) // bit_count:
+            nxt = data[index+bit_count:index+bit_count+bit_count]
+            print(f'  nxt {nxt.bin} ')
             counter += 1
-
+            x = dictionary[nxt.bin]
+            dictionary[key] = bytes([dictionary[current.bin][0]]) + dictionary[current.bin]
+            print (f'  key {key}')
+            print (f'    val {dictionary[key]}')
+    
         to_output = dictionary[current.bin]
+        print(f' output : {to_output}')
         output.extend(to_output)
     return output
 
 if __name__ == "__main__":
-    val = b'?? ?? abc abcabcabc ab??c'
+    # val = b'?? ?? abc abcabcabc ab??c'
+    # val = b'ababc'
+    # val = b'???'
+    # val = b'thisisthe'
+    val = b'abc abc'
     compressed = compress(val)
-    print (f'val: {bytes(val)}')
-    print (f'compressed: {compressed}')
-
     decompressed = decompress(compressed)
+    print (f'compressed: {compressed}')
+    print (f'val         : {bytes(val)}')
     print (f'decompressed: {bytes(decompressed)}')
     assert bytes(decompressed) == val
