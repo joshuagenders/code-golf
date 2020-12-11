@@ -42,14 +42,16 @@ def decompress(data: BitArray):
     compressed_int = lambda x: BitArray(x.to_bytes(2, 'big'))[16 - bit_count:]
     dictionary = {compressed_int(i).bin:i.to_bytes(1, 'big') for i in range(255)}
     output = bytearray()
-    for index in range(0, len(data), bit_count):
+    for i in range(0, len(data) // bit_count):
+        index = i * bit_count
         current = data[index:index + bit_count]
-        nxt = data[index:index+bit_count+bit_count]
-        if nxt.bin not in dictionary and counter < 2 ** bit_count:
+        nxt = data[index+bit_count:index+bit_count+bit_count]
+        if current.bin + nxt.bin not in dictionary and counter < 2 ** bit_count:
             key = compressed_int(counter).bin
-            dictionary[key] = nxt.tobytes()
+            v = dictionary[current.bin] + dictionary[nxt.bin]
+            dictionary[key] = v
             counter += 1
-        
+
         to_output = dictionary[current.bin]
         output.extend(to_output)
     return output
@@ -57,5 +59,8 @@ def decompress(data: BitArray):
 if __name__ == "__main__":
     val = b'?? ??'
     compressed = compress(val)
-    decompressed = decompress(val)
+    decompressed = decompress(compressed)
+    print (f'val: {val}')
+    print (f'compressed: {compressed}')
+    print (f'decompressed: {decompressed}')
     assert decompressed == val
