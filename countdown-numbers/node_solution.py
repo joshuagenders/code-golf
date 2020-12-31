@@ -47,14 +47,15 @@ class Node:
     def __str__(self):
         return f'{self.value}'
 
+
 nodes = [Node(n) for n in full_set]
 for node in nodes:
-    if node.value in operators:
+    if node.is_operator:
         # can move from an operator to any node including self
         node.children = nodes
-    # elif node.value == 1:
-    #     # don't include useless relationships like 1/ 1*
-    #     node.children = [n for n in nodes if n != node and n.value not in ['/', '*']]
+    elif node.value == 1:
+        # don't include useless relationships like 1->/ and 1->* (divide/multiply by 1)
+        node.children = [n for n in nodes if n != node and n.value not in ['/', '*']]
     else:
         # can move from a number to any node but itself
         node.children = [n for n in nodes if n != node]
