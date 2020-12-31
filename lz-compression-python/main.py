@@ -59,11 +59,13 @@ def decompress(data: BitArray):
     return output
 
 if __name__ == "__main__":
-    val = b'?? ?? abc abcabcabc ab??c'
+    val = b'???'
     # val = b'ababc'
     # val = b'???'
     # val = b'thisisthe'
     # val = b'ababcabca'
+    with open(f'./testfiles/tale.txt', 'rb') as f:
+        data = f.read()
     compressed = compress(val)
     decompressed = decompress(compressed)
     print (f'compressed: {compressed}')
