@@ -1,54 +1,41 @@
-# max number for 6 is 100 * 75 * 50 * 25 = 9,375,000
-# largest number you can get to and still divide/minus to get to the answer is 999 * 100 = 99900
-# any even number / odd number results in decimal
-# any odd number / even number results in decimal
-
-# calculate the result of every 'single' operation on numbers up to 64800. +/-* for 1-10, 25, 50, 75, 100
-# 1+100, 1+75, 
-# essentially creating a graph between numbers where the operation with another number is the edge
-# find single ways to get to numbers from numbers within valid space
-# all valid operations are some combination of these single operations
-
-# so once you combine all the ways to get to a number from a number with a single operation, you can then use the results as indexes in a map
-# i.e. if you can get to number x, here are all the valid numbers you could have come from, and all the valid ones you could go to
-# then traverse from each node finding all <=6 length chains resulting in numbers between 100 and 999
-# certain shortcuts can be made, i.e. once chain is length 5,  numbers over 9990 cannot result in an answer
-# any valid answer at chain
-# 1: {
-#     2: '- 1',
-#     1: '* 1',
-#     10: '/ 10'
-#     # would have 2-11 -
-# }
-# take each number, create a node
-# take each node, combine with each possble operation + number (small +big set with each operator = 56 operations)
-#   get or create node as a result
-#   add the operation to the node, (could we optimise by adding the reverse operation?)
-# do not create nodes for invalid operations, e.g. negative, non-integer,
-# repeat for total of 6 times
-# ...
-# two ways to maybe combine:
-# the last round is looping through 1-999, and performing the same loop, except now instead of adding to the node's paths, we combine that operation with every path in that node, and output
-# loop through all nodes from 1-999 and construct valid 6 length paths
+import time
 
 large_set = (25 , 50 , 75 , 100)
 small_set = (1 , 1 , 2 , 2 , 3 , 3 , 4 , 4 , 5 , 5 , 6 , 6 , 7 , 7 , 8 , 8 , 9 , 9 , 10 , 10)
 unique_set = (25 , 50 , 75 , 100, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-operators = ('+', '-', '/', '*')
 
 target_min = 100
 target_max = 999
-num_choices = 4 # 6
-
-
-operator_table = {
-    '+': lambda x, y: y + x,
-    '-': lambda x, y: y - x, 
-    '/': lambda x, y: y / x,
-    '*': lambda x, y: y * x
-}
+num_choices = 4 # 5 
 
 nodes = {}
+
+OPERATORS = set(['+', '-', '*', '/', '(', ')'])  # set of operators
+PRIORITY = {'+':1, '-':1, '*':2, '/':2} # dictionary having priorities 
+
+def infix_to_postfix(expression): #input expression
+    stack = [] # initially stack empty
+    output = '' # initially output empty
+
+    for ch in expression:
+        if ch not in OPERATORS:  # if an operand then put it directly in postfix expression
+            output+= ch
+        elif ch=='(':  # else operators should be put in stack
+            stack.append('(')
+        elif ch==')':
+            while stack and stack[-1]!= '(':
+                output+=stack.pop()
+            stack.pop()
+        else:
+            # lesser priority can't be on top on higher or equal priority    
+             # so pop and put in output   
+            while stack and stack[-1]!='(' and PRIORITY[ch]<=PRIORITY[stack[-1]]:
+                output+=stack.pop()
+            stack.append(ch)
+
+    while stack:
+        output+=stack.pop()
+    return output
 
 def get_or_create_node(number):
     if number not in nodes:
@@ -56,45 +43,50 @@ def get_or_create_node(number):
         nodes[number] = Node(number)
     return nodes[number]
 
-### a sequence of operations
-## the operator and number at each step
-# class Equation:
-#     def __init__(self, current_value, operations = []):
-#         # [[number, operation]]
-#         self.operations = operations
-#         self.initial_value = current_value
-#         self.current_value = current_value
+class Equation:
+    def __init__(self, operations = []):
+        self.operations = operations
 
-#     def append(self, operation, number):
-#         new_value = operator_table[operation](number, self.current_value)
-#         if not float(new_value).is_integer() or new_value < 0:
-#             return False
-#         # ensure doesn't include more than one of large set, or two of small set
-#         count = sum([o for o in self.operations if o[0] == number])
-#         if number in large_set and count < 2:
-#             return Equation(new_value, [self.operations, [number, operation]])
-#         elif number in small and count == 0:
-#             return Equation(new_value, [self.operations, [number, operation]])
-#         return False
+    def __eq__(self, other):
+        if len(self.operations) != len(other.operations):
+            return False
+        for op in range(len(self.operations)):
+            if self.operations[op][0] != other.operations[op][0]:
+                return False
+            if self.operations[op][1] != other.operations[op][1]:
+                return False
+        return True
+
+    def append(self, op):
+        self.operations.append(op)
+
+    def __str__(self):
+        output = ''
+        for op, n in self.operations:
+            if output == '':
+                output = f'{n}'
+                continue
+            if op == '*' or op =='/':
+                output = f'({output})'
+            output += f' {op} {n}'
+        return output
+
+    def __hash__(self):
+        return hash(str(self))
+
+    def __len__(self):
+        return len(self.operations)
 
 class Node:
     def __init__(self, number):
         self.number = number
-        self.equations = []
+        self.equations = set()
 
     def __str__(self):
         output = f'target number: {self.number} \n'
         for eq in self.equations:
-            # eq_output = ''
-            # for op, n in eq:
-            #     if eq_output == '':
-            #         eq_output = f'{n}'
-            #         continue
-            #     if op == '*' or op =='/':
-            #         eq_output = f'({eq_output}) '
-            #     eq_output += f'{op} {n}'
-            # output += f'{eq_output}\n'
             output += f'{eq}\n'
+            # output += f'{eq}\n'
         return output
 
     def operate_with_all(self):
@@ -102,67 +94,89 @@ class Node:
             return
         results = []
         for x in unique_set:
-            # result, operator, 
             results.append((self.number + x, ('+', x)))
             results.append((self.number - x, ('-', x)))
             if x != 1 and x != 0:
                 results.append((self.number / x, ('/', x)))
                 results.append((self.number * x, ('*', x)))
-        valid_results = [result for result in results if float(result[0]).is_integer() and result[0] >= 0]
+        valid_results = [result for result in results if float(result[0]).is_integer() and result[0] > 0]
 
-        print(f'valid results {valid_results}')
+        # print(f'valid results {valid_results}')
         # # all of this nodes equations, combined with the equations to the new nodes
         for result in valid_results:
             node = get_or_create_node(result[0])
-            print(f'target: {result[0]}')
+            # print(f'target: {result[0]}')
             for equation in self.equations:
                 # print(f'equation: {equation}')
                 if len(equation) >= num_choices:
                     continue
                 new_number = result[1][1]
-                count = sum(1 for x in equation if x[1] == new_number)
-                new_equation = equation[::]
+                count = sum(1 for x in equation.operations if x[1] == new_number)
+                new_equation = Equation(equation.operations[::])
                 new_equation.append(result[1])
 
                 # print(f'new_number {new_number}')
                 if new_number in large_set and count < 2:
-                    node.equations.append(new_equation)
+                    node.equations.add(new_equation)
                     # print(f'{self.number}->{node.number},{result[0]},{new_equation}')
-                    print(f'{new_equation}')
+                    # print(f'{new_equation}')
                 if new_number in small_set and count == 0:
-                    node.equations.append(new_equation)
-                    print(f'{new_equation}')
+                    node.equations.add(new_equation)
+                    # print(f'{new_equation}')
                     # print(f'{self.number}->{node.number},{result[0]},{new_equation}')
 
             # break
 
+def print_results():
+    result_nodes = [ node for k,node in nodes.items() if node.number >= target_min and node.number <= target_max and len(node.equations) > 0]
+    # print(*result_nodes)
+    # todo: group by length and print count
+    total = 0
+    for n in result_nodes:
+
+        x = len(n.equations)
+        print(f'{n.number}: {x}')
+        total += len(n.equations)
+    print(total)
+
 if __name__ == '__main__':
+    begin = time.time() 
     initial_nodes = [Node(node) for node in unique_set]
-#
+
     # initial nodes should contain a single equation, + n
     for node in initial_nodes:
-        node.equations = [[('+', node.number)]]
+        node.equations.add(Equation([('+', node.number)]))
         nodes[node.number] = node
 
     rounds = num_choices
-    for r in range(rounds - 2):
-        print(f'r: {r} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    for r in range(1, rounds):
         # take a copy of the list as it will be modified
+        print(f'Processing round {r}')
         n = dict(nodes)
         for k,node in n.items():
             node.operate_with_all()
-        # break    
+        print_results()
 
     # final round nodes
-    result_nodes = [ node for k,node in nodes.items() if node.number >= target_min and node.number <= target_max ]
-    for result in result_nodes:
-        result.operate_with_all()
-
-    result_nodes = [ node for k,node in nodes.items() if node.number >= target_min and node.number <= target_max and len(node.equations) > 0]
-    # [item for sublist in regular_list for item in sublist]
-    # print(*result_nodes)
+    # print(f'Processing round {rounds}')
+    # result_nodes = [ node for k,node in nodes.items() if node.number >= target_min and node.number <= target_max ]
+    # for result in result_nodes:
+    #     result.operate_with_all()
+    end = time.time()
+    
+    print_results()    
     print('done')
 
+    elapsed = end - begin
+    print(f'{elapsed} seconds')
+
+# todo validator
+# 1 digit  has 4 combinations          4
+# 2 digits has 36 combinations         40
+# 3 digits has 420 combinations        460
+# 4 digits has 6564 combinations       7024
+# 5 digits has 129444 combinations     136468
+# 6 digits has 3078564 combinations    3215032
 
 
 
