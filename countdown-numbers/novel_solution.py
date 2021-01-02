@@ -38,7 +38,7 @@ operators = ('+', '-', '/', '*')
 
 target_min = 100
 target_max = 999
-num_choices = 3 # 6
+num_choices = 4 # 6
 
 
 operator_table = {
@@ -52,7 +52,7 @@ nodes = {}
 
 def get_or_create_node(number):
     if number not in nodes:
-        print (f'creating node for {number}')
+        # print (f'creating node for {number}')
         nodes[number] = Node(number)
     return nodes[number]
 
@@ -83,51 +83,56 @@ class Node:
         self.equations = []
 
     def __str__(self):
-        return f'{self.number} : {self.equations}'
+        output = f'target number: {self.number} \n'
+        for eq in self.equations:
+            # eq_output = ''
+            # for op, n in eq:
+            #     if eq_output == '':
+            #         eq_output = f'{n}'
+            #         continue
+            #     if op == '*' or op =='/':
+            #         eq_output = f'({eq_output}) '
+            #     eq_output += f'{op} {n}'
+            # output += f'{eq_output}\n'
+            output += f'{eq}\n'
+        return output
+
     def operate_with_all(self):
         if self.number == 0:
             return
-        # combinations = []
-        # for num in unique_set:
-        #     for op in operators:
-        #         combinations.append([op, num])
-        
-        # for equation in self.equations:
-        #     pass
-
-
-        # perform operations with number
-        # store valid equations 
         results = []
         for x in unique_set:
             # result, operator, 
-            results.append((x + self.number, ('+', x)))
-            results.append((x - self.number, ('-', x)))
+            results.append((self.number + x, ('+', x)))
+            results.append((self.number - x, ('-', x)))
             if x != 1 and x != 0:
-                results.append((x / self.number, ('/', x)))
-                results.append((x * self.number, ('*', x)))
+                results.append((self.number / x, ('/', x)))
+                results.append((self.number * x, ('*', x)))
         valid_results = [result for result in results if float(result[0]).is_integer() and result[0] >= 0]
 
-        # print(f'valid results {valid_results}')
+        print(f'valid results {valid_results}')
         # # all of this nodes equations, combined with the equations to the new nodes
         for result in valid_results:
             node = get_or_create_node(result[0])
+            print(f'target: {result[0]}')
             for equation in self.equations:
                 # print(f'equation: {equation}')
-                if len(equation) > num_choices - 1:
+                if len(equation) >= num_choices:
                     continue
                 new_number = result[1][1]
                 count = sum(1 for x in equation if x[1] == new_number)
                 new_equation = equation[::]
                 new_equation.append(result[1])
 
+                # print(f'new_number {new_number}')
                 if new_number in large_set and count < 2:
                     node.equations.append(new_equation)
-                    # print(f'{self.number},{result[0]},{new_equation}')
+                    # print(f'{self.number}->{node.number},{result[0]},{new_equation}')
+                    print(f'{new_equation}')
                 if new_number in small_set and count == 0:
-                    new_equation.append(result[1])
                     node.equations.append(new_equation)
-                    # print(f'{self.number},{result[0]},{new_equation}')
+                    print(f'{new_equation}')
+                    # print(f'{self.number}->{node.number},{result[0]},{new_equation}')
 
             # break
 
@@ -140,7 +145,8 @@ if __name__ == '__main__':
         nodes[node.number] = node
 
     rounds = num_choices
-    for r in range(rounds - 1):
+    for r in range(rounds - 2):
+        print(f'r: {r} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
         # take a copy of the list as it will be modified
         n = dict(nodes)
         for k,node in n.items():
@@ -152,9 +158,9 @@ if __name__ == '__main__':
     for result in result_nodes:
         result.operate_with_all()
 
-    results = [ result for sublist in result_nodes for sublist in result.equations ]
+    result_nodes = [ node for k,node in nodes.items() if node.number >= target_min and node.number <= target_max and len(node.equations) > 0]
     # [item for sublist in regular_list for item in sublist]
-    print(*results)
+    # print(*result_nodes)
     print('done')
 
 
