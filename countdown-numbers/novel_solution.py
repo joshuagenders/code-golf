@@ -181,4 +181,5 @@ if __name__ == '__main__':
 
 
 
-
+# TODO convert output to postfix and compare with node/main solutions output
+# count by equation length and print
