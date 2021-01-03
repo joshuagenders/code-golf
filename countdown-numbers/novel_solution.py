@@ -6,7 +6,7 @@ unique_set = (25 , 50 , 75 , 100, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
 target_min = 100
 target_max = 999
-num_choices = 3 # 5
+num_choices = 2 # 5
 
 nodes = {}
 
@@ -108,6 +108,7 @@ class Node:
         for x in unique_set:
             results.append((self.number + x, ('+', x)))
             results.append((self.number - x, ('-', x)))
+            # if x != 1 and x != 0:
             if x != 1 and x != 0:
                 results.append((self.number / x, ('/', x)))
                 results.append((self.number * x, ('*', x)))
@@ -181,7 +182,7 @@ if __name__ == '__main__':
 
     result_nodes = [ node for k,node in nodes.items() if node.number >= target_min and node.number <= target_max ]
     solutions = [infix_to_postfix(str(item)) + f' = {l.number}' for l in result_nodes for item in l.equations]
-   
+
     elapsed = end - begin
     print(f'{elapsed} seconds')
     print('writing results to novel.results.txt')
@@ -200,5 +201,5 @@ if __name__ == '__main__':
 
 
 
-# TODO convert output to postfix and compare with node/main solutions output
+# TODO
 # count by equation length and print

@@ -57,13 +57,16 @@ def solve_rpn(tokens):
     stack = []
     for token in tokens:
         if (type(token) != int):
-            stack.append(operator_table[token](stack.pop(), stack.pop()))
+            r = operator_table[token](stack.pop(), stack.pop())
+            if (r < 0 or not float(r).is_integer()):
+                raise "Not valid RPN, was negative or non-integer"
+            stack.append(r)
         else:
             stack.append(token)
     return stack[0]
 
 if __name__ == "__main__":
-    numbers_used = 3 # anything larger than 3 won't run, O(((2n-1)!)^2) ?
+    numbers_used = 2 # anything larger than 3 won't run, O(((2n-1)!)^2) ?
     begin = time.time() 
     result = traverse_possible_outcomes(numbers_used)
     end = time.time()
