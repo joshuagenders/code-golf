@@ -36,7 +36,7 @@ operator_table = {
 full_set = large_set + small_set + operators
 target_min = 100
 target_max = 999
-num_choices = 2
+num_choices = 4
 equation_length = num_choices * 2 - 1
 solutions = {}
 
@@ -131,13 +131,13 @@ def traverse_possible_outcomes():
     for node in nodes:
         if node.value in viewed_starting_values:
             continue
-        print(f'calculating all equations starting with {node}')
+        # print(f'calculating all equations starting with {node}')
         viewed_starting_values.append(node.value)
         begin = time.time() 
         all_solutions_from_node(node, [])
         end = time.time()
         elapsed = end - begin
-        print(f'{node}: {elapsed} seconds')
+        # print(f'{node}: {elapsed} seconds')
         
 if __name__ == "__main__":
     begin = time.time() 
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     end = time.time()
     elapsed = end - begin
 
-    print(*solutions, sep='\n')
+    # print(*solutions, sep='\n')
     print(f'{elapsed} seconds')
     solution_count = sum([1 for s in solutions])
     print(f'found {solution_count} solutions')

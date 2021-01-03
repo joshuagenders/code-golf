@@ -185,6 +185,8 @@ if __name__ == '__main__':
 
     elapsed = end - begin
     print(f'{elapsed} seconds')
+    solution_count = len(solutions)
+    print(f'{solution_count} solutions found')
     print('writing results to novel.results.txt')
     with open('novel.result.txt', 'w') as f:
         f.write('\n'.join(solutions))
