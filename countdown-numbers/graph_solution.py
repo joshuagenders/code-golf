@@ -147,5 +147,5 @@ if __name__ == "__main__":
 
     print(*solutions, sep='\n')
     print(f'{elapsed} seconds')
-    solution_count = sum([len(s) for s in solutions])
+    solution_count = sum([1 for s in solutions])
     print(f'found {solution_count} solutions')

@@ -89,6 +89,12 @@ class Node:
             # output += f'{eq}\n'
         return output
 
+    def __gt__(self, other):
+        return self.number > other.number
+
+    def __lt__(self, other):
+        return self.number < other.number
+
     def operate_with_all(self):
         if self.number == 0:
             return
@@ -100,14 +106,13 @@ class Node:
                 results.append((self.number / x, ('/', x)))
                 results.append((self.number * x, ('*', x)))
         valid_results = [result for result in results if float(result[0]).is_integer() and result[0] > 0]
-
-        # print(f'valid results {valid_results}')
+        # if self.number == 10:
+        #     print(f'valid results {valid_results}')
         # # all of this nodes equations, combined with the equations to the new nodes
         for result in valid_results:
             node = get_or_create_node(result[0])
             # print(f'target: {result[0]}')
             for equation in self.equations:
-                # print(f'equation: {equation}')
                 if len(equation) >= num_choices:
                     continue
                 new_number = result[1][1]
@@ -116,11 +121,11 @@ class Node:
                 new_equation.append(result[1])
 
                 # print(f'new_number {new_number}')
-                if new_number in large_set and count < 2:
+                if new_number in large_set and count < 1:
                     node.equations.add(new_equation)
                     # print(f'{self.number}->{node.number},{result[0]},{new_equation}')
                     # print(f'{new_equation}')
-                if new_number in small_set and count == 0:
+                if new_number in small_set and count <= 1:
                     node.equations.add(new_equation)
                     # print(f'{new_equation}')
                     # print(f'{self.number}->{node.number},{result[0]},{new_equation}')
@@ -173,6 +178,7 @@ if __name__ == '__main__':
     for x in solutions:
         print(infix_to_postfix(str(x)))
         # print(str(x))
+        pass
     elapsed = end - begin
     print(f'{elapsed} seconds')
 
