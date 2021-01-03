@@ -6,7 +6,7 @@ unique_set = (25 , 50 , 75 , 100, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
 target_min = 100
 target_max = 999
-num_choices = 4 # 5 
+num_choices = 2 # 5
 
 nodes = {}
 
@@ -66,7 +66,7 @@ class Equation:
             if output == '':
                 output = f'{n}'
                 continue
-            if op == '*' or op =='/':
+            if (op == '*' or op =='/') and len(self.operations) > 2:
                 output = f'({output})'
             output += f' {op} {n}'
         return output
@@ -128,16 +128,17 @@ class Node:
             # break
 
 def print_results():
-    result_nodes = [ node for k,node in nodes.items() if node.number >= target_min and node.number <= target_max and len(node.equations) > 0]
-    # print(*result_nodes)
-    # todo: group by length and print count
-    total = 0
-    for n in result_nodes:
+    # result_nodes = [ node for k,node in nodes.items() if node.number >= target_min and node.number <= target_max and len(node.equations) > 0]
+    # # print(*result_nodes)
+    # # todo: group by length and print count
+    # total = 0
+    # for n in result_nodes:
 
-        x = len(n.equations)
-        print(f'{n.number}: {x}')
-        total += len(n.equations)
-    print(total)
+    #     x = len(n.equations)
+    #     print(f'{n.number}: {x}')
+    #     total += len(n.equations)
+    # print(total)
+    pass
 
 if __name__ == '__main__':
     begin = time.time() 
@@ -167,6 +168,11 @@ if __name__ == '__main__':
     print_results()    
     print('done')
 
+    result_nodes = [ node for k,node in nodes.items() if node.number >= target_min and node.number <= target_max ]
+    solutions = [item for l in result_nodes for item in l.equations]
+    for x in solutions:
+        print(infix_to_postfix(str(x)))
+        # print(str(x))
     elapsed = end - begin
     print(f'{elapsed} seconds')
 

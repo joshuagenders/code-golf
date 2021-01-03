@@ -25,7 +25,7 @@ def traverse_possible_outcomes(index_count = 6):
             for p in possible_equations:
                 try:
                     solution = solve_rpn(p)
-                    if solution > target_min and solution < target_max and float(solution).is_integer(): 
+                    if solution >= target_min and solution <= target_max and float(solution).is_integer(): 
                         if not solution in solutions:
                             solutions[solution] = {p}
                         else:
@@ -63,9 +63,12 @@ def solve_rpn(tokens):
     return stack[0]
 
 if __name__ == "__main__":
-    numbers_used = 3 # anything larger than 3 won't run, O(((2n-1)!)^2) ?
+    numbers_used = 2 # anything larger than 3 won't run, O(((2n-1)!)^2) ?
     begin = time.time() 
     result = traverse_possible_outcomes(numbers_used)
     end = time.time()
     elapsed = end - begin
+    # solutions = [strl for k,v in result.items() for l in v]
+    solutions = [' '.join(map(str, l)) for k,v in result.items() for l in v]
+    print(*solutions, sep='\n')
     print(f'{elapsed} seconds')

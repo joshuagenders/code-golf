@@ -36,7 +36,7 @@ operator_table = {
 full_set = large_set + small_set + operators
 target_min = 100
 target_max = 999
-num_choices = 4
+num_choices = 2
 equation_length = num_choices * 2 - 1
 solutions = {}
 
@@ -144,6 +144,8 @@ if __name__ == "__main__":
     result = traverse_possible_outcomes()
     end = time.time()
     elapsed = end - begin
+
+    print(*solutions, sep='\n')
     print(f'{elapsed} seconds')
     solution_count = sum([len(s) for s in solutions])
     print(f'found {solution_count} solutions')
