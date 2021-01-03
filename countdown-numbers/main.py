@@ -36,7 +36,7 @@ def traverse_possible_outcomes(index_count = 6):
 
 def generate_rpn_for_set(numbers):
     number_permutations = permutations(numbers)
-    operator_combinations = combinations(operators, len(numbers) - 1)
+    operator_combinations = combinations(operators * (len(numbers) - 1), len(numbers) - 1)
     equations = list(set(chain(*[permutations(x + y) for x in number_permutations for y in operator_combinations])))
     valid_equations = filter(is_valid_rpn, equations)
     # print (f'{list(valid_equations)} valid equations for set {numbers}')
@@ -66,7 +66,7 @@ def solve_rpn(tokens):
     return stack[0]
 
 if __name__ == "__main__":
-    numbers_used = 2 # anything larger than 3 won't run, O(((2n-1)!)^2) ?
+    numbers_used = 3
     begin = time.time() 
     result = traverse_possible_outcomes(numbers_used)
     end = time.time()
@@ -75,6 +75,8 @@ if __name__ == "__main__":
     solutions = [' '.join(map(str, l)) + f' = {k}' for k,v in result.items() for l in v]
     # print(*solutions, sep='\n')
     print(f'{elapsed} seconds')
+    solution_count = len(solutions)
+    print(f'{solution_count} solutions found')
     print('writing results to main.results.txt')
     with open('main.result.txt', 'w') as f:
         f.write('\n'.join(solutions))

@@ -6,7 +6,7 @@ unique_set = (25 , 50 , 75 , 100, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
 target_min = 100
 target_max = 999
-num_choices = 2 # 5
+num_choices = 5 # 5
 
 nodes = {}
 
@@ -51,6 +51,7 @@ def get_or_create_node(number):
 
 class Equation:
     def __init__(self, operations = []):
+        # [ [ op, num] ]
         self.operations = operations
 
     def __eq__(self, other):
@@ -87,6 +88,8 @@ class Node:
     def __init__(self, number):
         self.number = number
         self.equations = set()
+        #from node, op, num
+        self.pending_joins = []
 
     def __str__(self):
         output = f'target number: {self.number} \n'
@@ -101,15 +104,32 @@ class Node:
     def __lt__(self, other):
         return self.number < other.number
 
+    def update(self):
+        for from_node, op, num in self.pending_joins:
+            if from_node == self:
+                continue
+            for equation in from_node.equations:
+                if len(equation) >= num_choices:
+                    continue
+                count = sum(1 for x in equation.operations if x[1] == num)
+                new_equation = Equation(equation.operations[::])
+                new_equation.append([op, num])
+
+                if num in large_set and count < 1:
+                    self.equations.add(new_equation)
+                if num in small_set and count <= 1:
+                    self.equations.add(new_equation)
+        # self.pending_joins = []
+
     def operate_with_all(self):
-        if self.number == 0:
-            return
+        # if self.number == 0:
+        #     return
         results = []
         for x in unique_set:
             results.append((self.number + x, ('+', x)))
             results.append((self.number - x, ('-', x)))
             # if x != 1 and x != 0:
-            if x != 1 and x != 0:
+            if x != 0:
                 results.append((self.number / x, ('/', x)))
                 results.append((self.number * x, ('*', x)))
         valid_results = [result for result in results if float(result[0]).is_integer() and result[0] > 0]
@@ -118,24 +138,13 @@ class Node:
         # # all of this nodes equations, combined with the equations to the new nodes
         for result in valid_results:
             node = get_or_create_node(result[0])
+            #TODO Now we want to tell the node that you can get to you from me with this operation, (combined with all the ways to get to me)
+            # we want to fix this so its not just all the ways to 'currently' get to me? I think...
             # print(f'target: {result[0]}')
-            for equation in self.equations:
-                if len(equation) >= num_choices:
-                    continue
-                new_number = result[1][1]
-                count = sum(1 for x in equation.operations if x[1] == new_number)
-                new_equation = Equation(equation.operations[::])
-                new_equation.append(result[1])
+            node.pending_joins.append((self, result[1][0], result[1][1]))
 
-                # print(f'new_number {new_number}')
-                if new_number in large_set and count < 1:
-                    node.equations.add(new_equation)
-                    # print(f'{self.number}->{node.number},{result[0]},{new_equation}')
-                    # print(f'{new_equation}')
-                if new_number in small_set and count <= 1:
-                    node.equations.add(new_equation)
-                    # print(f'{new_equation}')
-                    # print(f'{self.number}->{node.number},{result[0]},{new_equation}')
+
+            
 
             # break
 
@@ -168,6 +177,8 @@ if __name__ == '__main__':
         n = dict(nodes)
         for k,node in n.items():
             node.operate_with_all()
+        for k,node in n.items():
+            node.update()
         print_results()
 
     # final round nodes
@@ -175,6 +186,10 @@ if __name__ == '__main__':
     result_nodes = [ node for k,node in nodes.items() if node.number >= target_min and node.number <= target_max ]
     for result in result_nodes:
         result.operate_with_all()
+    for result in result_nodes:
+        result.update()
+    for k,result in nodes.items():
+        result.update()
     end = time.time()
     
     print_results()    
@@ -185,6 +200,8 @@ if __name__ == '__main__':
 
     elapsed = end - begin
     print(f'{elapsed} seconds')
+    solution_count = len(solutions)
+    print(f'{solution_count} solutions found')
     print('writing results to novel.results.txt')
     with open('novel.result.txt', 'w') as f:
         f.write('\n'.join(solutions))
