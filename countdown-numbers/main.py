@@ -63,12 +63,16 @@ def solve_rpn(tokens):
     return stack[0]
 
 if __name__ == "__main__":
-    numbers_used = 2 # anything larger than 3 won't run, O(((2n-1)!)^2) ?
+    numbers_used = 3 # anything larger than 3 won't run, O(((2n-1)!)^2) ?
     begin = time.time() 
     result = traverse_possible_outcomes(numbers_used)
     end = time.time()
     elapsed = end - begin
     # solutions = [strl for k,v in result.items() for l in v]
-    solutions = [' '.join(map(str, l)) for k,v in result.items() for l in v]
-    print(*solutions, sep='\n')
+    solutions = [' '.join(map(str, l)) + f' = {k}' for k,v in result.items() for l in v]
+    # print(*solutions, sep='\n')
     print(f'{elapsed} seconds')
+    print('writing results to main.results.txt')
+    with open('main.result.txt', 'w') as f:
+        f.write('\n'.join(solutions))
+    print ('done')

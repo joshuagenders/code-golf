@@ -6,7 +6,7 @@ unique_set = (25 , 50 , 75 , 100, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
 target_min = 100
 target_max = 999
-num_choices = 2 # 5
+num_choices = 3 # 5
 
 nodes = {}
 
@@ -35,7 +35,13 @@ def infix_to_postfix(expression): #input expression
 
     while stack:
         output+=stack.pop()
-    return output
+    return clean_postfix_output(output)
+
+def clean_postfix_output(o):
+    x = o.replace('+', ' +').replace('*', ' *').replace('-', ' -').replace('/', ' /')
+    while '  ' in x:
+        x = x.replace('  ', ' ')
+    return x
 
 def get_or_create_node(number):
     if number not in nodes:
@@ -164,23 +170,24 @@ if __name__ == '__main__':
         print_results()
 
     # final round nodes
-    # print(f'Processing round {rounds}')
-    # result_nodes = [ node for k,node in nodes.items() if node.number >= target_min and node.number <= target_max ]
-    # for result in result_nodes:
-    #     result.operate_with_all()
+    print(f'Processing round {rounds}')
+    result_nodes = [ node for k,node in nodes.items() if node.number >= target_min and node.number <= target_max ]
+    for result in result_nodes:
+        result.operate_with_all()
     end = time.time()
     
     print_results()    
     print('done')
 
     result_nodes = [ node for k,node in nodes.items() if node.number >= target_min and node.number <= target_max ]
-    solutions = [item for l in result_nodes for item in l.equations]
-    for x in solutions:
-        print(infix_to_postfix(str(x)))
-        # print(str(x))
-        pass
+    solutions = [infix_to_postfix(str(item)) + f' = {l.number}' for l in result_nodes for item in l.equations]
+   
     elapsed = end - begin
     print(f'{elapsed} seconds')
+    print('writing results to novel.results.txt')
+    with open('novel.result.txt', 'w') as f:
+        f.write('\n'.join(solutions))
+    print ('done')
 
 # todo validator
 # 1 digit  has 4 combinations          4
